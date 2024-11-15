@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>廣告營業額計算機</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+
+        .calculator {
+            width: 600px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h3 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            margin-bottom: 20px;
+            border-collapse: collapse;
+        }
+
+        table th, table td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ccc;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .result {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .highlight {
+            background-color: red;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="calculator">
+    <h3>廣告營業額計算機</h3>
+
+    <table>
+        <tr>
+            <th>項目</th>
+            <th>數值</th>
+        </tr>
+        <tr>
+            <td>廣告費</td>
+            <td><input type="number" id="adCost" placeholder="輸入廣告費" /></td>
+        </tr>
+        <tr>
+            <td>倍率</td>
+            <td><input type="number" id="multiplier" placeholder="輸入倍率" /></td>
+        </tr>
+        <tr>
+            <td>CTR (點擊率)</td>
+            <td><input type="number" id="ctr" placeholder="輸入CTR" /> %</td>
+        </tr>
+        <tr>
+            <td>CVR (轉換率)</td>
+            <td><input type="number" id="cvr" placeholder="輸入CVR" /> %</td>
+        </tr>
+        <tr>
+            <td>客單價</td>
+            <td><input type="number" id="avgOrderValue" placeholder="輸入客單價" /></td>
+        </tr>
+        <tr>
+            <td>固定成本</td>
+            <td><input type="number" id="fixedCost" placeholder="輸入固定成本" /></td>
+        </tr>
+        <tr>
+            <td>毛利率</td>
+            <td><input type="number" id="grossMargin" placeholder="輸入毛利率" /> %</td>
+        </tr>
+    </table>
+
+    <button id="calculateBtn" onclick="calculateAdRevenue()">計算營業額</button>
+
+    <div class="result">
+        <h4>點擊數: <span id="clicks">0</span></h4>
+        <h4>訂單數: <span id="orders">0</span></h4>
+        <h4>ROAS: <span id="roas">0</span></h4>
+        <h4>BEP (損益兩平): <span id="bep">0</span></h4>
+        <h4 id="revenueLabel">營業額: <span id="adRevenue">0</span></h4>
+    </div>
+</div>
+
+<script>
+    // 控制數值上下、左右調整功能
+    document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('keydown', function (event) {
+            if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                event.preventDefault();
+                let nextElement = event.key === "ArrowDown" ? getNextElement(event.target, 'down') : getNextElement(event.target, 'up');
+                if (nextElement) nextElement.focus();
+            }
+
+            if (event.key === "ArrowRight") {
+                event.preventDefault();
+                let currentValue = parseFloat(event.target.value) || 0;
+                event.target.value = currentValue + 1;
+            }
+
+            if (event.key === "ArrowLeft") {
+                event.preventDefault();
+                let currentValue = parseFloat(event.target.value) || 0;
+                event.target.value = currentValue > 0 ? currentValue - 1 : currentValue;
+            }
+        });
+    });
+
+    // 取得上下方向的下一個元素
+    function getNextElement(currentElement, direction) {
+        let inputs = Array.from(document.querySelectorAll('input'));
+        let index = inputs.indexOf(currentElement);
+        if (direction === 'down' && index < inputs.length - 1) {
+            return inputs[index + 1];
+        } else if (direction === 'up' && index > 0) {
+            return inputs[index - 1];
+        }
+        return null;
+    }
+
+    function calculateAdRevenue() {
+        const adCost = parseFloat(document.getElementById('adCost').value) || 0;
+        const multiplier = parseFloat(document.getElementById('multiplier').value) || 0;
+        const ctr = parseFloat(document.getElementById('ctr').value) / 100 || 0;
+        const cvr = parseFloat(document.getElementById('cvr').value) / 100 || 0;
+        const avgOrderValue = parseFloat(document.getElementById('avgOrderValue').value) || 0;
+        const fixedCost = parseFloat(document.getElementById('fixedCost').value) || 0;
+        const grossMargin = parseFloat(document.getElementById('grossMargin').value) / 100 || 0;
+
+        // 計算
+        const clicks = adCost * multiplier * ctr;
+        const orders = clicks * cvr;
+        const roas = avgOrderValue ? (adCost * multiplier * ctr * cvr * avgOrderValue) / adCost : 0;
+        const bep = fixedCost / grossMargin;
+
+        const revenue = adCost * multiplier * ctr * cvr * avgOrderValue;
+
+        document.getElementById('clicks').innerText = clicks.toFixed(2);
+        document.getElementById('orders').innerText = orders.toFixed(2);
+        document.getElementById('roas').innerText = roas.toFixed(2);
+        document.getElementById('bep').innerText = bep.toFixed(2);
+        
+        const revenueElement = document.getElementById('adRevenue');
+        const revenueLabel = document.getElementById('revenueLabel');
+
+        if (revenue >= bep) {
+            revenueElement.innerText = revenue.toFixed(2);
+            revenueElement.classList.add('highlight');
+            document.getElementById('bep').classList.remove('highlight');
+        } else {
+            revenueElement.innerText = revenue.toFixed(2);
+            document.getElementById('bep').classList.add('highlight');
+            revenueElement.classList.remove('highlight');
+        }
+    }
+</script>
+
+</body>
+</html>
